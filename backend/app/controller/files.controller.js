@@ -117,7 +117,7 @@ const parseSearchString = (str) => {
 
 // Controller to handle search request
 exports.searchFiles = (req, res) => {
-  const { searchString, salaryPerHour, salaryPerMonth, salaryPerAnnum } =
+  const { searchString } =
     req.body;
   let queryConditions = [];
   // Parse the search string into a Sequelize query
@@ -130,7 +130,6 @@ exports.searchFiles = (req, res) => {
     where: {
       [Op.and]: queryConditions,
     },
-    attributes: { exclude: ["data"] },
   })
     .then((files) => res.send(files))
     .catch((err) => {
@@ -144,6 +143,11 @@ exports.searchFiles = (req, res) => {
 exports.getAllUploadedFiles = (req, res) => {
   File.findAll()
     .then((data) => {
+      // set response header to allow file download
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=download.json"
+      );
       res.send(data);
     })
     .catch((err) => {
@@ -160,7 +164,7 @@ exports.findOne = async (req, res) => {
   try {
     const file = await File.findByPk(id);
     if (file) {
-      res.setHeader("Content-Disposition", "attachment; filename=" + file.name);
+      res.setHeader("Content-Disposition", "attachment; filename=" + file.fileName);
       res.send(file);
     } else {
       res.status(404).send("File not found");

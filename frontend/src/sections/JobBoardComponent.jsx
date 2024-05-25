@@ -8,63 +8,79 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
+import { Post } from "../api/actions";
+import { Post_FindOne_URL, Post_SearchFiles_URL } from "../api/apiURL";
+import { convertFileToBase64 } from "../helpers/functions";
 
 function JobBoardComponent(props) {
   const [searchString, setSearchString] = useState(null);
   const [salaryType, setSalaryType] = useState("perAnnum");
-  // create JSON to render having the id , lable and value ,  ids are : currentJobTitle , desiredJobTitle , salaryMinimum , lastActive , lookingFor
-  const jobFilters = [
-    {
-      id: "currentJobTitle",
-      label: "Current Job Title",
-      value: "Financial Accountant",
-    },
-    {
-      id: "desiredJobTitle",
-      label: "Desired Job Title",
-      value: "Accounting and Finance",
-    },
-    {
-      id: "salaryMinimum",
-      label: "Salary Minimum",
-      value: "$100 per hour",
-    },
-    {
-      id: "lastActive",
-      label: "Last Active",
-      value: "1 month ago",
-    },
-    {
-      id: "lookingFor",
-      label: "Looking For",
-      value: "Full-time & part-time roles",
-    },
-  ];
+  const [results, setResults] = useState([]);
 
-  // funtion to check the search string in thejson values and want to highlight the values that are searched and matched in JSON
-    function checkSearchString(searchString, jobFilters) {
-        // only check from the current title
-        const currentJobTitle = jobFilters.find(
-          (filter) => filter.id === "currentJobTitle"
-        );
-        // check if the search string is present in the current job title
-        if (currentJobTitle.value.includes(searchString)) {
-          // if present then highlight the value
-          currentJobTitle.value = (
-            <span style={{ backgroundColor: "yellow" }}>
-              {currentJobTitle.value}
-            </span>
-          );
+  const searchFiles = useCallback(() => {
+    try {
+      Post(
+        { searchString, searchString },
+        Post_SearchFiles_URL,
+        (resp) => {
+          const files = resp.map((file) => {
+            console.log("file", file);
+            return {
+              ...file,
+              name: file.fileName,
+              fileType: file.fileType,
+              data: new Uint8Array(file.data),
+            };
+          });
+          setResults(files);
+        },
+        (error) => {
+          console.error(error);
         }
-  // console if match
-        console.log("currentJobTitle", currentJobTitle);
-
+      );
+    } catch (error) {
+      console.error("I am catching");
     }
-    // call the function to check the search string in json values
-    checkSearchString(searchString, jobFilters);
+  }, [searchString]);
+  console.log("results", results);
+  useEffect(() => {
+    searchFiles();
+  }, [searchFiles]);
 
+  const handleDownload = (file) => {
+    try {
+      Post(
+        { id: file.id },
+        Post_FindOne_URL,
+        (resp) => {
+          const fileData = resp.data; // Assuming the file data is directly available in the response
+          
+          // process the data buffer to download the file
+  
+          const blob = new Blob([fileData], { type: file.fileType });
+          const url = URL.createObjectURL(blob);
+  
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = file.fileName;
+  
+          document.body.appendChild(a);
+          a.click();
+  
+          document.body.removeChild(a); // Clean up after download
+          URL.revokeObjectURL(url);
+        },
+        (error) => {
+          console.error("Error downloading file:", error);
+        }
+      );
+    } catch (error) {
+      console.error("Failed to download file:", error);
+    }
+  };
+  
   return (
     <div style={{ margin: "2rem" }}>
       <br />
@@ -79,14 +95,6 @@ function JobBoardComponent(props) {
             onChange={(e) => setSearchString(e.target.value)}
           />
         </Grid>
-        {/* <Grid item xs={12} sm={12} md={2} lg={2}>
-            <TextField
-              id="outlined-basic"
-              label="Within miles of"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid> */}
         <Grid item xs={12} sm={12} md={4} lg={4}>
           <TextField
             id="outlined-basic"
@@ -103,7 +111,9 @@ function JobBoardComponent(props) {
             startIcon={
               <Icon icon="lets-icons:search-duotone" fontSize="25px" />
             }
-          >Search</Button>
+          >
+            Search
+          </Button>
         </Grid>
       </Grid>
       {searchString && (
@@ -166,65 +176,140 @@ function JobBoardComponent(props) {
           </Box>
         </Grid>
         <Grid item xs={12} sm={12} md={8} lg={8}>
-          {/*  a box with height and width and border  */}
-          <Box
-            sx={{
-              border: 1,
-              borderColor: "primary.main",
-              borderRadius: 2,
-              height: "100%",
-              width: "100%",
-              display: "flex",
-              justifyContent: "space-around",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: "50%",
-                marginLeft: "5rem",
-              }}
-            >
-              <Typography variant="h6" sx={{ margin: "10px" }}>
-                Name withheld |{" "}
-              </Typography>
-              {/* render the above json here with labels and values  in such a way one lable and its value in one line and second in next line and so on */}
-              {jobFilters.map((filter) => (
-                <div key={filter.id} style={{ display: "flex" }}>
-                  <Typography
-                    variant="body1"
-                    sx={{ margin: "5px", minWidth: "150px" }}
+          {results.length > 0 ? (
+            <>
+              <Alert severity="success">
+                <Typography variant="body1">
+                  {results.length} results found
+                </Typography>
+              </Alert>
+              {results.map((result) => (
+                <Box
+                  sx={{
+                    border: 1,
+                    borderColor: "primary.main",
+                    borderRadius: 5,
+                    marginTop: "1rem",
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-around",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: "50%",
+                      marginLeft: "5rem",
+                    }}
                   >
-                    {filter.label}:
-                  </Typography>
-                  <Typography variant="body1" sx={{ margin: "5px", flex: 1 }}>
-                    {filter.value}
-                  </Typography>
-                </div>
+                    <Typography variant="h6" sx={{ margin: "10px" }}>
+                      {result.firstName} {result.lastName}
+                    </Typography>
+                    {/* render the above json here with labels and values  in such a way one lable and its value in one line and second in next line and so on */}
+                    <div style={{ display: "flex" }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", minWidth: "150px" }}
+                      >
+                        Current Job Title:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", flex: 1 }}
+                      >
+                        {result.currentTitle}
+                      </Typography>
+                    </div>
+                    <div style={{ display: "flex" }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", minWidth: "150px" }}
+                      >
+                        Desired Job Title:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", flex: 1 }}
+                      >
+                        {result.desiredJobTitle}
+                      </Typography>
+                    </div>
+                    <div style={{ display: "flex" }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", minWidth: "150px" }}
+                      >
+                        Salary Min:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", flex: 1 }}
+                      >
+                        {result.salaryMin}
+                      </Typography>
+                    </div>
+                    <div style={{ display: "flex" }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", minWidth: "150px" }}
+                      >
+                        last Active:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", flex: 1 }}
+                      >
+                        {/* extract only Date */}
+                        {result.updatedAt.split("T")[0] + ` at ` + result.updatedAt.split("T")[1].split(".")[0]}
+                      </Typography>
+                    </div>
+                    <div style={{ display: "flex" }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", minWidth: "150px" }}
+                      >
+                        Looking For:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ marginRight: "23x", flex: 1 }}
+                      >
+                        {result.lookingFor}
+                      </Typography>
+                    </div>
+                    <br />
+                    {/*  a button to view full profile */}
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      style={{ width: "70%", margin: "1rem" }}
+                    >
+                      View Full Profile
+                    </Button>
+                  </div>
+                  <div style={{ margin: "3rem" }}>
+                    {/*  abutton to download CV */}
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                      onClick={() => handleDownload(result)}
+                      sx={{ padding: "5px" }}
+                      startIcon={
+                        <Icon icon="akar-icons:download" fontSize="25px" />
+                      }
+                    >
+                      Download CV
+                    </Button>
+                  </div>
+                </Box>
               ))}
-              <br />
-              {/*  a button to view full profile */}
-              <Button
-                variant="outlined"
-                color="primary"
-                style={{ width: "70%", margin: "1rem" }}
-              >
-                View Full Profile
-              </Button>
-            </div>
-            <div style={{ margin: "3rem" }}>
-              {/*  abutton to download CV */}
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                sx={{ padding: "5px" }}
-                startIcon={<Icon icon="akar-icons:download" fontSize="25px" />}
-              >
-                Download CV
-              </Button>
-            </div>
-          </Box>
+            </>
+          ) : (
+            <Alert severity="error">
+              <Typography variant="body1">No results found</Typography>
+            </Alert>
+          )}
         </Grid>
       </Grid>
     </div>
