@@ -6,16 +6,30 @@ import { Post_FindOne_URL } from "../api/apiURL";
 function UploadFilePage(props) {
   const [fileUrl, setFileUrl] = useState("");
 
+  function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  }
   const getFile = useCallback(() => {
     Post(
       {
-        id: 1,
+        id: 4,
       },
       Post_FindOne_URL,
       (resp) => {
-        const blob = new Blob([resp.data], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        setFileUrl(url);
+        const file = resp;
+        const base64 = convertFileToBase64(
+          new Blob([new Uint8Array(file.data.data)], {
+            type: file.type,
+          })
+        );
+        base64.then((data) => {
+          setFileUrl(data);
+        });
       },
       (error) => {
         console.error(error);
@@ -28,8 +42,8 @@ function UploadFilePage(props) {
   return (
     <div>
       <h1>Upload File Page</h1>
-      {/* <FileUploader /> */}
-      <div>
+      <FileUploader />
+      {/* <div>
         {fileUrl ? (
           <a href={fileUrl} download>
             Download File
@@ -37,7 +51,7 @@ function UploadFilePage(props) {
         ) : (
           <p>Loading...</p>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

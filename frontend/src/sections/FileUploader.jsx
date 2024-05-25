@@ -86,18 +86,27 @@ const FileUploader = () => {
   }, [files]);
 
   const handleUploadSingleFile = (fileIndex) => {
-    const payload = {
-      name: payloadFiles[fileIndex].name,
-      type: payloadFiles[fileIndex].type,
-      // Convert fil to Blob and then to ArrayBuffer
-      data: new Uint8Array(
-        payloadFiles[fileIndex].data.arrayBuffer()
-      ).buffer,
-
-    };
+    console.log("fileIndex", payloadFiles[fileIndex]);
+    const formData = new FormData();
+    formData.append("file", payloadFiles[fileIndex].data);
+    formData.append("firstName", "John");
+    formData.append("lastName", "Doe");
+    formData.append("location", "New York");
+    formData.append("currentTitle", "Software Engineer");
+    formData.append("desiredJobTitle", "Senior Software Engineer");
+    formData.append("email", "john.doe@example.com");
+    formData.append("phone", "123-456-7890");
+    formData.append("salaryPerHour", "50");
+    formData.append("salaryPerMonth", "8000");
+    formData.append("salaryPerAnnum", "96000");
+    formData.append("salaryMin", "5000");
+    formData.append("salaryMax", "10000");
+    formData.append("lookingFor", "Full-time");
+    formData.append("fileType", payloadFiles[fileIndex].type);
+    formData.append("fileSize", payloadFiles[fileIndex].size);
     try {
       Post(
-        payload,
+        formData,
         Post_UploadFile_URL,
         (response) => {
           console.log(response);
@@ -140,10 +149,9 @@ const FileUploader = () => {
   }, [getAllFiles]);
 
   const downloadFile = (file) => {
-console.log("file", file) 
-    
+    console.log("file", file);
+
     try {
-      
       // Create a Blob from the Uint8Array data
       const blob = new Blob([file.data], { type: file.type });
       const url = URL.createObjectURL(blob);
@@ -159,7 +167,7 @@ console.log("file", file)
       console.error("Failed to download file:", error);
     }
   };
-  
+
   // console.log("files", serverFiles)
 
   const deleteFile = (file) => {
@@ -180,7 +188,6 @@ console.log("file", file)
     }
   };
 
-
   return (
     <Box sx={{ maxWidth: 600, mx: "auto", mt: 5, px: 2 }}>
       <Typography variant="h5" component="h2" gutterBottom>
@@ -195,10 +202,27 @@ console.log("file", file)
         />
         <Typography>Multiple Files</Typography>
       </Box>
-      <Dropzone onDrop={handleDrop} onDragOver={handleDragOver}>
-        <UploadFileIcon
-          sx={{ fontSize: 48, color: theme.palette.primary.main }}
-        />
+      <Dropzone
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        sx={{
+          border: `5px dashed ${theme.palette.primary.main}`,
+          padding: theme.spacing(2),
+          textAlign: "center",
+          cursor: "pointer",
+          borderRadius: theme.shape.borderRadius,
+          transition: "background-color 0.3s",
+          "&:hover": {
+            backgroundColor: theme.palette.action.hover,
+          },
+          "&:active": {
+            backgroundColor: theme.palette.action.selected,
+          },
+        }}
+      >
+        {/* <UploadFileIcon
+          sx={{ fontSize: 20, color: theme.palette.primary.main }}
+        /> */}
         <Typography variant="body1" gutterBottom>
           Drag and drop files here, or click to select files
         </Typography>
@@ -271,7 +295,7 @@ console.log("file", file)
               edge="end"
               aria-label="delete"
               onClick={() => {
-                deleteFile(file)
+                deleteFile(file);
               }}
             >
               <DeleteIcon />

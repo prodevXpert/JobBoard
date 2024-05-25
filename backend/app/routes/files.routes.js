@@ -7,6 +7,7 @@ module.exports = (app) => {
   router.post("/deleteFile", files.deleteFile);
   router.post("/getAllUploadedFiles", files.getAllUploadedFiles);
   router.post("/findOne", files.findOne);
+  router.post("/searchFiles", files.searchFiles);
 
   app.use("/api/files", router);
 };

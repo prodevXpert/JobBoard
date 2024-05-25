@@ -17,6 +17,10 @@ db.sequelize
     console.log("Failed to sync db: " + err.message);
   });
 
+// // drop the table if it already exists
+// db.sequelize.sync({ force: true }).then(() => {
+//  console.log("Drop and re-sync db.");
+// });
 // basic route to test the server
 app.get("/", (req, res) => {
   res.send(`<h2>Server is running and live</h2>`);

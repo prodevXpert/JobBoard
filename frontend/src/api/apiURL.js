@@ -5,3 +5,4 @@ export const Post_GetAllUploadedFiles_URL = `${baseURL}/api/files/getAllUploaded
 export const Post_DeleteFile_URL = `${baseURL}/api/files/deleteFile`
 export const Post_DownloadFile_URL = `${baseURL}/api/files/downloadFile`
 export const Post_FindOne_URL = `${baseURL}/api/files/findOne`
+export const Post_SearchFiles_URL = `${baseURL}/api/files/searchFiles`
