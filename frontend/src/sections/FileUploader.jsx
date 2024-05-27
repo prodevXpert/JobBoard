@@ -86,7 +86,7 @@ const FileUploader = () => {
   }, [files]);
 
   const handleUploadSingleFile = (fileIndex) => {
-    console.log("fileIndex", payloadFiles[fileIndex]);
+    console.log("filedata", payloadFiles[fileIndex].data);
     const formData = new FormData();
     formData.append("file", payloadFiles[fileIndex].data);
     formData.append("firstName", "John");
@@ -126,16 +126,17 @@ const FileUploader = () => {
         {},
         Post_GetAllUploadedFiles_URL,
         (resp) => {
-          const files = resp.map((file) => ({
-            id: file.id,
-            name: file.name,
-            type: file.type,
-            data: new Uint8Array(file.data.data),
-            createdAt: file.createdAt,
-            updatedAt: file.updatedAt,
-          }));
+          console.log("resp", resp);
+          // const files = resp.map((file) => ({
+          //   id: file.id,
+          //   name: file.name,
+          //   type: file.type,
+          //   data: new Uint8Array(file.data.data),
+          //   createdAt: file.createdAt,
+          //   updatedAt: file.updatedAt,
+          // }));
 
-          setServerFiles(files);
+          setServerFiles(resp);
         },
         (error) => {
           console.error(error);
@@ -148,26 +149,48 @@ const FileUploader = () => {
     getAllFiles();
   }, [getAllFiles]);
 
-  const downloadFile = (file) => {
-    console.log("file", file);
+  // const downloadFile = (file) => {
+  //   console.log("file", file);
 
-    try {
-      // Create a Blob from the Uint8Array data
-      const blob = new Blob([file.data], { type: file.type });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      console.log("Download initiated successfully.");
-    } catch (error) {
-      console.error("Failed to download file:", error);
+  //   try {
+  //     // Create a Blob from the Uint8Array data
+  //     const blob = new Blob([file.data], { type: file.type });
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = file.name;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+  //     window.URL.revokeObjectURL(url);
+  //     console.log("Download initiated successfully.");
+  //   } catch (error) {
+  //     console.error("Failed to download file:", error);
+  //   }
+  // };
+
+  function downloadFile(base64Data, fileName, fileType) {
+    // Create a Blob from the base64 data
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
-  };
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: fileType });
 
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = fileName;
+
+    // Trigger the download
+    document.body.appendChild(link);
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+}
   // console.log("files", serverFiles)
 
   const deleteFile = (file) => {
@@ -228,6 +251,8 @@ const FileUploader = () => {
         </Typography>
         <input
           type="file"
+          // only accept pdf, word and img files
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
           multiple={isMultiple}
           onChange={handleFileChange}
           style={{ display: "none" }}
@@ -288,8 +313,8 @@ const FileUploader = () => {
       <List>
         {serverFiles.map((file, index) => (
           <ListItem key={index}>
-            <button onClick={() => downloadFile(file)}>Download</button>
-            <ListItemText primary={file?.name} />
+            <button onClick={() => downloadFile(file?.data , file?.fileName, file?.fileType)}>Download</button>
+            <ListItemText primary={file?.fileName} />
             {/* Delete  */}
             <IconButton
               edge="end"

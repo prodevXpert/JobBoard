@@ -5,7 +5,8 @@ const { Op } = require("sequelize");
 
 // Create and Save a new File
 exports.createFile = (req, res) => {
-  const { originalname, mimetype, buffer } = req.file;
+  const { originalname, buffer } = req.file;
+  console.log("file", req.file);
   const {
     firstName,
     lastName,
@@ -116,45 +117,73 @@ const parseSearchString = (str) => {
 };
 
 // Controller to handle search request
-exports.searchFiles = (req, res) => {
-  const { searchString } =
-    req.body;
-  let queryConditions = [];
-  // Parse the search string into a Sequelize query
-  if (searchString) {
-    queryConditions = parseSearchString(searchString);
-  }
+exports.searchFiles = async (req, res) => {
+  try {
+    const { searchString } = req.body;
+    let queryConditions = [];
+    // Parse the search string into a Sequelize query
+    if (searchString) {
+      queryConditions = parseSearchString(searchString);
+    }
 
-  // Build the Sequelize query
-  File.findAll({
-    where: {
-      [Op.and]: queryConditions,
-    },
-  })
-    .then((files) => res.send(files))
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while retrieving files.",
-      });
+    // Build the Sequelize query
+    const files = await File.findAll({
+      where: {
+        [Op.and]: queryConditions,
+      },
     });
+    const mappedFiles = files.map((file) => ({
+      id: file.dataValues.id,
+      fileName: file.dataValues.fileName,
+      fileType: file.dataValues.fileType,
+      fileSize: file.dataValues.fileSize,
+      // Convert file data to base64 string
+      data: file.dataValues.data.toString("base64"),
+      // Add other fields you want to include
+      firstName: file.dataValues.firstName,
+      lastName: file.dataValues.lastName,
+      currentTitle : file.dataValues.currentTitle,
+      desiredJobTitle : file.dataValues.desiredJobTitle,
+      salaryMin : file.dataValues.salaryMin,
+      lookingFor : file.dataValues.lookingFor,
+      updatedAt : file.dataValues.updatedAt,
+      // Add more fields as needed
+    }));
+
+    // Send the mapped files array as the response
+    res.json(mappedFiles);
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
 // Retrieve all Files from the database.
-exports.getAllUploadedFiles = (req, res) => {
-  File.findAll()
-    .then((data) => {
-      // set response header to allow file download
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=download.json"
-      );
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while retrieving files.",
-      });
-    });
+exports.getAllUploadedFiles = async (req, res) => {
+  try {
+    const files = await File.findAll();
+    console.log("files", files);
+
+    // Map files to desired format with file data in base64 string format
+    const mappedFiles = files.map((file) => ({
+      id: file.dataValues.id,
+      fileName: file.dataValues.fileName,
+      fileType: file.dataValues.fileType,
+      fileSize: file.dataValues.fileSize,
+      // Convert file data to base64 string
+      data: file.dataValues.data.toString("base64"),
+      // Add other fields you want to include
+      firstName: file.dataValues.firstName,
+      lastName: file.dataValues.lastName,
+      // Add more fields as needed
+    }));
+
+    // Send the mapped files array as the response
+    res.json(mappedFiles);
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
 // Find a single File with an id
@@ -164,7 +193,10 @@ exports.findOne = async (req, res) => {
   try {
     const file = await File.findByPk(id);
     if (file) {
-      res.setHeader("Content-Disposition", "attachment; filename=" + file.fileName);
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=" + file.fileName
+      );
       res.send(file);
     } else {
       res.status(404).send("File not found");

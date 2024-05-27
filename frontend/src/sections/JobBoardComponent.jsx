@@ -26,16 +26,17 @@ import {
           {},
           Post_SearchFiles_URL,
           (resp) => {
-            const files = resp.map((file) => {
-              return {
-                ...file,
-                name: file.fileName,
-                fileType: file.fileType,
-                data: new Uint8Array(file.data),
-              };
-            });
-            setAllResults(files);
-            setFilteredResults(files);
+            console.log("Files fetched successfully", resp);
+            // const files = resp.map((file) => {
+            //   return {
+            //     ...file,
+            //     name: file.fileName,
+            //     fileType: file.fileType,
+            //     data: new Uint8Array(file.data),
+            //   };
+            // });
+            setAllResults(resp);
+            setFilteredResults(resp);
           },
           (error) => {
             console.error(error);
@@ -66,34 +67,28 @@ import {
       handleSearch(searchString);
     }, [searchString, allResults]);
   
-    const handleDownload = (file) => {
-      try {
-        Post(
-          { id: file.id },
-          Post_FindOne_URL,
-          (resp) => {
-            const fileData = resp.data; // Assuming the file data is directly available in the response
-            const blob = new Blob([fileData], { type: file.fileType });
-            const url = URL.createObjectURL(blob);
-  
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = file.fileName;
-  
-            document.body.appendChild(a);
-            a.click();
-  
-            document.body.removeChild(a); // Clean up after download
-            URL.revokeObjectURL(url);
-          },
-          (error) => {
-            console.error("Error downloading file:", error);
-          }
-        );
-      } catch (error) {
-        console.error("Failed to download file:", error);
+    function downloadFile(base64Data, fileName, fileType) {
+      // Create a Blob from the base64 data
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
-    };
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: fileType });
+  
+      // Create a temporary anchor element
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+  
+      // Trigger the download
+      document.body.appendChild(link);
+      link.click();
+  
+      // Clean up
+      document.body.removeChild(link);
+  }
   
     const highlightText = (text, highlight) => {
       const parts = text.split(new RegExp(`(${highlight})`, "gi"));
@@ -316,7 +311,7 @@ import {
                         variant="outlined"
                         color="primary"
                         fullWidth
-                        onClick={() => handleDownload(result)}
+                        onClick={() => downloadFile(result?.data , result?.fileName, result?.fileType)}
                         sx={{ padding: "5px" }}
                         startIcon={<Icon icon="akar-icons:download" fontSize="25px" />}
                       >

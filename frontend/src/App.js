@@ -8,8 +8,8 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {/* <UploadFilePage />
-       */}
+      {/* <UploadFilePage /> */}
+      {/*  */}
        <JobBoardMainPage/>
     </ThemeProvider>
   );
