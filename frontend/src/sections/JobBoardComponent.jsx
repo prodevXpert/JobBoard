@@ -85,6 +85,16 @@ function JobBoardComponent(props) {
     // Clean up
     document.body.removeChild(link);
   }
+  const convertBase64ToBlob = (base64Data, type) => {
+    // Create a Blob from the base64 data
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: type });
+  };
 
   const highlightText = (text, highlight) => {
     const parts = text.split(new RegExp(`(${highlight})`, "gi"));
@@ -92,7 +102,7 @@ function JobBoardComponent(props) {
       <span>
         {parts.map((part, index) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-            <span key={index} style={{ backgroundColor: "yellow" }}>
+            <span key={index} style={{ backgroundColor: "blue" }}>
               {part}
             </span>
           ) : (
@@ -275,7 +285,9 @@ function JobBoardComponent(props) {
                   {expandedCard === result.id && (
                    <>
                       {result.fileType === "application/pdf" ? (
-                        <embed src={result.data} width="100%" height="600px" />
+                        <embed src={URL.createObjectURL(
+                          convertBase64ToBlob(result.data, result.fileType)
+                        )} width="100%" height="600px" />
                       ) : result.fileType === "image/jpeg" ||
                         result.fileType === "image/png" ? (
                         <img
