@@ -28,6 +28,8 @@ app.get("/", (req, res) => {
 
 // set routes
 require("./app/routes/files.routes")(app);
+require("./app/routes/searchResults.routes")(app);
+
 app.listen(port, () => {
   console.log(
     `Server started on port ${port} at ${new Date().toLocaleString()} and can be accessed at http://localhost:${port}`

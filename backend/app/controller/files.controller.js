@@ -62,12 +62,12 @@ const parseSearchString = (str) => {
     str = str.slice(1, -1);
   }
 
-  const terms = str.split(" and ").map((term) => term.trim());
+  const terms = str.split(" AND ").map((term) => term.trim());
   const query = [];
 
   terms.forEach((term) => {
     const orTerms = term
-      .split(" or ")
+      .split(" OR ")
       .map((orTerm) => orTerm.trim().replace(/"/g, ""));
     if (orTerms.length > 1) {
       query.push({

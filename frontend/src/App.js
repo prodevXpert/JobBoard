@@ -9,7 +9,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {/* <UploadFilePage /> */}
-      {/*  */}
+      
        <JobBoardMainPage/>
     </ThemeProvider>
   );

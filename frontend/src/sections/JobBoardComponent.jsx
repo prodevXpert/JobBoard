@@ -26,7 +26,7 @@ function JobBoardComponent(props) {
   const fetchAllFiles = useCallback(() => {
     try {
       Post(
-        {},
+        {searchString : searchString},
         Post_SearchFiles_URL,
         (resp) => {
           console.log("Files fetched successfully", resp);
@@ -40,7 +40,7 @@ function JobBoardComponent(props) {
     } catch (error) {
       console.error("Error fetching files", error);
     }
-  }, []);
+  }, [searchString]);
 
   useEffect(() => {
     fetchAllFiles();
@@ -102,7 +102,7 @@ function JobBoardComponent(props) {
       <span>
         {parts.map((part, index) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-            <span key={index} style={{ backgroundColor: "blue" }}>
+            <span key={index} style={{ backgroundColor: "yellow" }}>
               {part}
             </span>
           ) : (

@@ -6,3 +6,5 @@ export const Post_DeleteFile_URL = `${baseURL}/api/files/deleteFile`
 export const Post_DownloadFile_URL = `${baseURL}/api/files/downloadFile`
 export const Post_FindOne_URL = `${baseURL}/api/files/findOne`
 export const Post_SearchFiles_URL = `${baseURL}/api/files/searchFiles`
+
+export const Get_SearchResults_URL = `${baseURL}/api/searchResults/getSearchResults`
